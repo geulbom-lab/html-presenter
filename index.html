@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="오프라인에서 작동하는 HTML 발표 템플릿. 듀얼 모니터 발표자 보기, 대본, 다음 슬라이드, 타이머, PDF 인쇄를 지원합니다.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>HTML 발표자 보기 | 글봄 공개 템플릿</title>
+  <style>
+    :root { color-scheme:light; --ink:#203a2b; --forest:#244b39; --forest-dark:#173426; --leaf:#8fb590; --sage:#dce8d7; --cream:#faf8f1; --paper:#fffdf7; --muted:#6c796d; --border:#dfe7db; --gold:#dfb977; --ui:#18221c; --notes:#25352b; --soft:#f1f4eb; font-family:Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,sans-serif }
+    * { box-sizing:border-box }
+    html,body { margin:0; min-height:100%; }
+    body { background:#17221b; color:#eef3e8; }
+    button { font:inherit; cursor:pointer; border:0; }
+    button:focus-visible { outline:3px solid #a2cda0; outline-offset:3px }
+    .topbar { min-height:72px; padding:12px max(22px,3vw); display:flex; align-items:center; gap:15px; border-bottom:1px solid #39483b; background:#1a281f }
+    .wordmark { width:37px; height:37px; display:grid;place-items:center; background:var(--sage); color:var(--forest-dark); font-weight:900; border-radius:12px; font-size:15px; letter-spacing:-1px }
+    .site-title { font-weight:800; font-size:16px; }
+    .site-sub { color:#a2b3a3; font-size:12px; margin-top:2px }
+    .top-actions { margin-left:auto; display:flex; gap:7px; flex-wrap:wrap; align-items:center }
+    .control { padding:10px 13px; color:#f7f9f4; background:#314338; border:1px solid #49604d; border-radius:10px; font-size:12px; font-weight:700; transition:background .12s }
+    .control:hover { background:#43604a }
+    .control.emphasis { background:#b3d3aa; color:#193723; border-color:#b3d3aa }
+    .control.emphasis:hover {background:#c5e1be}
+    .presentation-shell { min-height:calc(100vh - 72px); display:grid; place-items:center; padding:30px 5vw 74px }
+    .stage { width:min(100%, 1300px); aspect-ratio:16/9; background:var(--cream); border:1px solid #6c806d; border-radius:12px; box-shadow:0 24px 65px #09110b66; overflow:hidden; container-type:inline-size }
+    .slide { width:100%; height:100%; min-height:0; display:flex; flex-direction:column; background:var(--paper); color:var(--ink); padding:6.2cqw 7cqw 4.2cqw; position:relative; overflow:hidden }
+    .slide:before { content:""; position:absolute; width:26cqw; height:26cqw; right:-8cqw; top:-11cqw; border-radius:50%; background:#e9efe3; pointer-events:none }
+    .slide:after { content:""; position:absolute; width:32cqw; height:8cqw; left:-3cqw; bottom:-6cqw; border-radius:50%; background:#eaf0e5; transform:rotate(-14deg); pointer-events:none }
+    .slide--cover,.slide--closing { background:var(--forest); color:#f7f5eb }
+    .slide--cover:before,.slide--closing:before { background:#41674d; width:47cqw;height:47cqw;top:-18cqw;right:-19cqw }
+    .slide--cover:after,.slide--closing:after {background:#315a41}
+    .slide .slide-kicker { position:relative; z-index:1; letter-spacing:.065em; text-transform:uppercase; font-size:1.5cqw; font-weight:850; color:#618168; margin-bottom:1.8cqw }
+    .slide--cover .slide-kicker,.slide--closing .slide-kicker {color:#c0d9ba}
+    .slide-title { position:relative; z-index:1; font-size:5.35cqw; line-height:1.24; letter-spacing:-.055em; margin:0; font-weight:900; white-space:pre-line; word-break:keep-all }
+    .slide--cover .slide-title {font-size:6.1cqw;max-width:80%;margin-top:5.1cqw}
+    .slide--closing .slide-title {font-size:6.2cqw;margin-top:6cqw}
+    .slide-lead { position:relative; z-index:1; font-size:2.1cqw; line-height:1.55; color:#5e7160; margin:2cqw 0 0; max-width:82%; word-break:keep-all }
+    .slide--cover .slide-lead,.slide--closing .slide-lead {color:#dfebe0}
+    .slide-foot { position:absolute; z-index:1; bottom:3cqw; left:7cqw; right:7cqw; display:flex; justify-content:space-between; align-items:center; gap:2cqw; border-top:1px solid #d3dfcf; padding-top:1.4cqw; color:#728375; font-size:1.25cqw; font-weight:700 }
+    .slide--cover .slide-foot,.slide--closing .slide-foot {border-color:#74977a;color:#d1e2d0}
+    .slide-mark { display:flex; gap:.5cqw; align-items:center }
+    .mark-dot { display:inline-block;width:1.1cqw;height:1.1cqw; background:#94b896;border-radius:50% }
+    .slide-cards {display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;margin-top:4.2cqw;position:relative;z-index:1;flex:1;max-height:29cqw}
+    .slide-card {border:1px solid #dce6d9;border-radius:1.7cqw;background:#f4f8ee;padding:2.3cqw;display:flex;flex-direction:column;gap:1.3cqw}
+    .slide-card-number {font-size:1.5cqw;color:#7fa381;font-weight:900}
+    .slide-card-title {font-size:2.55cqw;line-height:1.35;font-weight:900;word-break:keep-all}
+    .slide-card-detail {color:#667869;font-size:1.65cqw;line-height:1.52;word-break:keep-all}
+    .steps {display:grid;grid-template-columns:repeat(4,1fr);gap:1.5cqw;position:relative;z-index:1;margin-top:5cqw;}
+    .step {border-top:solid .5cqw #89ab8e;background:#f1f5eb;padding:2.5cqw 1.7cqw;min-height:22cqw;position:relative}
+    .step:not(:last-child):after {content:"›";position:absolute;right:-1.3cqw;top:8cqw;font-size:2.5cqw;color:#8cab8d;z-index:2;font-weight:900}
+    .step-num {color:#81a78a;font-size:1.8cqw;font-weight:900}
+    .step-title {font-size:2.5cqw;font-weight:900;margin:2cqw 0 1.4cqw}
+    .step-text {font-size:1.5cqw;line-height:1.6;color:#687c6a;word-break:keep-all}
+    .quote-shell {position:relative;z-index:1;margin:auto 0;max-width:85%;padding-left:3cqw;border-left:.7cqw solid var(--gold)}
+    .quote-text {font-size:4.5cqw;line-height:1.35;font-weight:900;white-space:pre-line;word-break:keep-all;letter-spacing:-.045em}
+    .quote-detail {font-size:1.7cqw;color:#697d6d;margin-top:2.2cqw}
+    .compare {display:grid;grid-template-columns:1fr 1fr;gap:2.5cqw;position:relative;z-index:1;margin-top:4.5cqw;flex:1;max-height:30cqw}
+    .compare-col {background:#f3f4ed;border:1px solid #e0e6dd;border-radius:1.7cqw;padding:3cqw}
+    .compare-col:last-child {background:#e2eddb;border-color:#c4dbc2}
+    .compare-label {font-size:1.45cqw;font-weight:900;letter-spacing:.08em;color:#6a806b}
+    .compare-title {font-size:3cqw;margin:2cqw 0 1.8cqw;line-height:1.3;font-weight:900;white-space:pre-line;word-break:keep-all}
+    .compare-detail {font-size:1.7cqw;line-height:1.5;color:#64776a;white-space:pre-line}
+    .checks {display:grid;grid-template-columns:1fr 1fr;gap:1.7cqw 2.4cqw;position:relative;z-index:1;margin-top:4cqw;}
+    .check-item {display:flex;gap:1.4cqw;align-items:flex-start;background:#f1f5ea;padding:2.1cqw;border-radius:1.2cqw;font-size:2.05cqw;font-weight:750;line-height:1.4}
+    .check-icon {display:grid;place-items:center;flex:none;width:2.7cqw;height:2.7cqw;border-radius:50%;background:#79a07e;color:white;font-size:1.6cqw;font-weight:900}
+    .bottom-nav {width:min(100%,1300px);margin-top:21px;display:flex;align-items:center;gap:12px;}
+    .pager {display:flex;align-items:center;gap:11px;min-width:150px;justify-content:center;font-variant-numeric:tabular-nums;color:#b9c8b8;font-size:14px;font-weight:800}
+    .nav-btn {background:#324639;color:#f4f7f0;width:43px;height:43px;border-radius:11px;font-size:23px;font-weight:700}
+    .nav-btn:hover {background:#4a6551}
+    .nav-btn:disabled {opacity:.35;cursor:default}
+    .nav-hint {margin-left:auto;color:#9aafa1;font-size:12px}
+    .toast {position:fixed;right:25px;bottom:22px;background:#eef4e5;color:#1d3b2a;border:1px solid #b8cfb7;padding:12px 17px;border-radius:10px;box-shadow:0 7px 30px #0004;z-index:30;font-size:13px;font-weight:750;max-width:min(500px,85vw);display:none}
+    .toast.show {display:block}
+    dialog {border:1px solid #bfcbbd;border-radius:18px;padding:25px 29px;color:#1c3926;background:#fffef9;box-shadow:0 25px 90px #0008;max-width:540px;width:calc(100vw - 32px)}
+    dialog::backdrop {background:#091b12b5}
+    .dialog-title {font-size:22px;font-weight:900;margin:0 0 13px}
+    .help-row {display:grid;grid-template-columns:145px 1fr;border-bottom:1px solid #e4e9e2;padding:10px 0;gap:10px;font-size:14px}
+    .key {display:inline-block;border:1px solid #c8d8c7;background:#eef4ed;border-radius:6px;padding:2px 7px;font-weight:850}
+    .dialog-close {background:#244b39;color:white;padding:10px 17px;border-radius:8px;margin-top:18px}
+    /* Presenter pop-up. Layout and slide previews remain offline. */
+    body.presenter-window {background:#17221b;color:#e7f0e4;height:100vh;overflow:hidden}
+    .pv-top {height:62px;padding:10px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #46584a;background:#23362a}
+    .pv-title {font-weight:900;font-size:17px}.pv-meta {font-size:13px;color:#bbccba}
+    .pv-spacer {flex:1}.pv-tools {display:flex;align-items:center;gap:8px}
+    .pv-button {background:#415d46;color:#ecf4e9;border-radius:8px;padding:9px 12px;font-size:13px;font-weight:800}
+    .pv-button:hover {background:#56775b}
+    .pv-time {font-size:19px;letter-spacing:.03em;font-variant-numeric:tabular-nums;font-weight:900;margin-right:6px;color:#d5ecd0}
+    .pv-body {height:calc(100vh - 62px);display:grid;grid-template-columns:minmax(440px,53%) 1fr;gap:16px;padding:16px}
+    .pv-left {min-height:0;display:flex;flex-direction:column;gap:12px;overflow:auto;padding-right:2px}
+    .pv-caption {color:#acbcae;font-weight:850;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+    .preview-frame {border-radius:10px;overflow:hidden;aspect-ratio:16/9;background:#fffef9;container-type:inline-size;flex:none;box-shadow:0 4px 16px #0004}
+    .pv-next {width:60%;min-width:250px}
+    .pv-next .slide {opacity:.9}
+    .pv-notes {min-width:0;min-height:0;background:#f9faf4;border-radius:12px;padding:24px 27px;display:flex;flex-direction:column;color:#203926}
+    .pv-note-top {display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:18px;border-bottom:1px solid #dfe8da}
+    .pv-note-heading {font-weight:900;font-size:20px}.pv-note-sub {font-size:13px;color:#647966;margin-top:6px}
+    .pv-note-body {overflow:auto;white-space:normal;line-height:1.8;font-size:var(--note-size,25px);padding-top:20px;word-break:keep-all}
+    .note-line {margin:0 0 .65em}
+    .note-mark {color:#327546;font-weight:900;background:#e4f0e1;padding:0 .13em;border-radius:4px}
+    .note-pause {color:#9a5e1e;background:#fff0d8;padding:0 .18em;border-radius:4px;font-weight:800}
+    .pv-tag {color:#8dab8f;font-size:12px;font-weight:800}
+    @media(max-width:950px) { .topbar{align-items:flex-start;flex-wrap:wrap}.top-actions{width:100%;margin:0}.presentation-shell{min-height:calc(100vh - 115px);padding:20px 12px}.stage{border-radius:6px}.nav-hint{display:none}.pv-body{grid-template-columns:1fr 1fr}.pv-tools{gap:4px}.pv-button{padding:8px 7px;font-size:12px} }
+    @media(max-width:650px) {.topbar{padding:10px 12px}.top-actions{gap:5px}.control{font-size:11px;padding:9px 10px}.stage{aspect-ratio:16/9}.bottom-nav{margin-top:14px}.pv-body{display:block;overflow:auto}.pv-left{height:53vh}.pv-notes{min-height:60vh}.pv-top{height:auto;flex-wrap:wrap}}
+    @media(prefers-reduced-motion:reduce) {*,*:before,*:after{transition:none!important;animation:none!important}}
+    @media print {body{background:white!important}.topbar,.bottom-nav,.toast,dialog{display:none!important}.presentation-shell{padding:0!important;display:block;min-height:0}.stage{border:0;box-shadow:none;border-radius:0;width:100%;max-width:none;aspect-ratio:16/9}@page{size:16in 9in;margin:0}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wordmark" aria-hidden="true">글봄</div>
+    <div><div class="site-title">HTML 발표자 보기</div><div class="site-sub">발표 화면과 대본을 따로 · 한 파일로, 오프라인에서</div></div>
+    <div class="top-actions">
+      <button class="control emphasis" id="presenterBtn" type="button" title="발표자 화면 열기 (P)">발표자 화면 <b>P</b></button>
+      <button class="control" id="fullBtn" type="button" title="전체화면 (F)">전체화면 <b>F</b></button>
+      <button class="control" id="printBtn" type="button">PDF 저장 / 인쇄</button>
+      <button class="control" id="helpBtn" type="button">사용법 <b>?</b></button>
+    </div>
+  </header>
+  <main class="presentation-shell">
+    <section class="stage" id="stage" aria-label="현재 슬라이드" aria-live="polite"></section>
+    <nav class="bottom-nav" aria-label="슬라이드 조작">
+      <button class="nav-btn" id="prevBtn" aria-label="이전 슬라이드">‹</button>
+      <div class="pager" id="pageCounter">01 / 07</div>
+      <button class="nav-btn" id="nextBtn" aria-label="다음 슬라이드">›</button>
+      <div class="nav-hint">← → 슬라이드 이동 · P 발표자 화면 · F 전체화면 · ? 도움말</div>
+    </nav>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <dialog id="helpDialog" aria-labelledby="helpTitle">
+    <h2 class="dialog-title" id="helpTitle">발표하기 전에</h2>
+    <p style="line-height:1.65;font-size:14px;color:#5e705f">듀얼 모니터는 Windows에서 <b>Win + P → 확장</b>으로 설정하세요. HTML을 브라우저에서 연 뒤 발표자 화면을 별도로 띄워 각 모니터로 옮기면 됩니다.</p>
+    <div class="help-row"><div><span class="key">←</span> <span class="key">→</span></div><div>이전 / 다음 슬라이드</div></div>
+    <div class="help-row"><div><span class="key">P</span></div><div>대본·다음 장·타이머가 있는 발표자 창 열기</div></div>
+    <div class="help-row"><div><span class="key">F</span></div><div>청중 화면 전체화면</div></div>
+    <div class="help-row"><div><span class="key">Home</span> <span class="key">End</span></div><div>첫 슬라이드 / 마지막 슬라이드</div></div>
+    <div class="help-row"><div><span class="key">?</span> <span class="key">Esc</span></div><div>도움말 열기 / 닫기</div></div>
+    <div class="help-row"><div>대본 기호</div><div><b>∨</b> 짧게 숨 · <b>‖</b> 멈춤 · <b>[2초 멈춤 · 청중 보기]</b> 행동 메모</div></div>
+    <button class="dialog-close" id="closeHelp" type="button">확인</button>
+  </dialog>
+<script>
+'use strict';
+/*
+ * HTML Presenter — public example template by geulbom-lab (MIT)
+ * HOW TO EDIT: Change only the SLIDES array below.
+ * Each note is private to the presenter window (not shown on audience screen).
+ * No images, confidential documents, external scripts, or network requests are included.
+ */
+const SLIDES = [
+  {
+    kind:'cover', kicker:'HTML 발표 템플릿 · 예시',
+    title:'말할 내용에\n집중하는 발표',
+    lead:'듀얼 모니터 발표자 보기부터 대본과 타이머까지, HTML 파일 하나로.',
+    note:'안녕하세요. ∨ 오늘은 간단한 업무 개선 제안을 말씀드리겠습니다.\n먼저 결론부터 말씀드릴게요. ‖ 발표 준비의 기준은 디자인보다 전달할 메시지입니다.\n[2초 멈춤 · 청중 보기]', seconds:60
+  },
+  {
+    kind:'cards', kicker:'01 · 현재의 어려움',
+    title:'발표 준비에서\n자주 막히는 순간',
+    lead:'예시 상황입니다. 실제 조직의 수치나 사례를 사용하지 않았습니다.',
+    items:[['자료가 흩어짐','메모와 파일이 여러 곳에 있어 흐름을 잡기 어렵습니다.'],['디자인에 집중','템플릿을 고르느라 정작 핵심 메시지가 뒤로 밀립니다.'],['발표 중 불안','대본과 남은 시간을 확인하기 어렵습니다.']],
+    note:'첫 번째 문제는 내용이 흩어져 있다는 점입니다. ∨ 두 번째는 디자인에 쓰는 시간입니다.\n세 번째는 발표자의 부담입니다. ‖ 이 세 가지를 줄여 보겠습니다.', seconds:90
+  },
+  {
+    kind:'quote', kicker:'02 · 핵심 메시지',
+    title:'발표의 시작은\n템플릿이 아니라\n하고 싶은 말입니다.',
+    lead:'한 장에 하나의 메시지를 담아 봅니다.',
+    note:'여기서는 속도를 조금 늦춥니다. ∨\n한 장에 하나의 메시지. ‖ 이 원칙이 가장 중요합니다.\n[2초 멈춤 · 청중 보기]', seconds:70
+  },
+  {
+    kind:'steps', kicker:'03 · 실행 방법',
+    title:'네 단계로\n발표를 준비합니다',
+    lead:'복잡한 작업 대신 반복 가능한 순서로 구성합니다.',
+    items:[['원고','전달할 핵심부터 정리'],['구성','슬라이드마다 메시지 하나'],['시연','화면과 대본 함께 확인'],['수정','실제로 발표하며 개선']],
+    note:'순서는 네 가지입니다. ∨ 첫째, 원고를 씁니다. 둘째, 한 장에 하나의 메시지를 배치합니다.\n셋째, 발표자 화면에서 연습합니다. ‖ 넷째, 실제로 열어 보고 고칩니다.', seconds:105
+  },
+  {
+    kind:'compare', kicker:'04 · 화면 분리',
+    title:'같은 발표를\n두 화면으로',
+    lead:'청중에게 보이는 것과 발표자가 확인할 것을 구분합니다.',
+    items:[['청중 화면','핵심 슬라이드','메시지와 그림만 간결하게 보여 줍니다.'],['발표자 화면','대본 + 다음 장','시간을 확인하고 흐름을 조절합니다.']],
+    note:'청중 화면에는 이 슬라이드만 보입니다. ∨\n제 화면에는 발표 대본과 다음 장 미리보기, 타이머가 있습니다.\n[발표자 창을 가리키며 2초 멈춤] ‖', seconds:110
+  },
+  {
+    kind:'checklist', kicker:'05 · 최종 확인',
+    title:'발표 전에는\n이것만 확인',
+    lead:'이 템플릿은 인터넷 연결 없이 브라우저에서 실행됩니다.',
+    items:['슬라이드 글자 크기가 충분한가?','발표자 창이 별도로 열리는가?','두 모니터가 “확장”으로 설정됐는가?','PDF 백업을 저장했는가?'],
+    note:'발표 전 체크리스트입니다. ∨ 글자 크기, 발표자 창, 모니터 설정, PDF 백업.\n[2초 멈춤] 브라우저 환경이 다를 수 있으니 현장에서 반드시 시험합니다.', seconds:75
+  },
+  {
+    kind:'closing', kicker:'정리 · 감사합니다',
+    title:'디자인보다\n전달할 내용에\n더 집중하기',
+    lead:'이 발표자료는 공개용 가상 예시입니다. 원하는 내용으로 바꿔 사용하세요.',
+    note:'이상으로 예시 발표를 마칩니다. ∨\n발표에 꼭 필요한 기능만 남기고, 내용에 더 집중해 보겠습니다.\n감사합니다. ‖ [청중 보기]', seconds:60
+  }
+];
+
+const $ = id => document.getElementById(id);
+const htmlEscape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const two = n => String(n).padStart(2,'0');
+const formatSec = sec => `${two(Math.floor(sec/60))}:${two(sec%60)}`;
+let current=0, presenter=null, timerStart=null, elapsed=0, notesSize=25, slideStart=Date.now();
+let toastHandle=null;
+function notify(msg){const e=$('toast');e.textContent=msg;e.classList.add('show');clearTimeout(toastHandle);toastHandle=setTimeout(()=>e.classList.remove('show'),3900)}
+function presentHTML(slide, number){
+  const text = v=>htmlEscape(v), cards=slide.items||[];
+  let middle='';
+  if(slide.kind==='cards') middle=`<div class="slide-cards">${cards.map((it,i)=>`<div class="slide-card"><span class="slide-card-number">${two(i+1)}</span><div class="slide-card-title">${text(it[0])}</div><div class="slide-card-detail">${text(it[1])}</div></div>`).join('')}</div>`;
+  if(slide.kind==='steps') middle=`<div class="steps">${cards.map((it,i)=>`<div class="step"><div class="step-num">${two(i+1)}</div><div class="step-title">${text(it[0])}</div><div class="step-text">${text(it[1])}</div></div>`).join('')}</div>`;
+  if(slide.kind==='quote') middle=`<div class="quote-shell"><div class="quote-text">${text(slide.title)}</div><div class="quote-detail">${text(slide.lead)}</div></div>`;
+  if(slide.kind==='compare') middle=`<div class="compare">${cards.map((it,i)=>`<div class="compare-col"><div class="compare-label">${i?'발표자만 보는 화면':'모두가 보는 화면'}</div><div class="compare-title">${text(it[1])}</div><div class="compare-detail">${text(it[2])}</div></div>`).join('')}</div>`;
+  if(slide.kind==='checklist') middle=`<div class="checks">${cards.map(it=>`<div class="check-item"><div class="check-icon">✓</div><div>${text(it)}</div></div>`).join('')}</div>`;
+  return `<article class="slide slide--${text(slide.kind)}"><div class="slide-kicker">${text(slide.kicker)}</div>${slide.kind==='quote'?'':`<h1 class="slide-title">${text(slide.title)}</h1><p class="slide-lead">${text(slide.lead)}</p>`}${middle}<footer class="slide-foot"><span class="slide-mark"><span class="mark-dot"></span> HTML Presenter · 공개 예시</span><span>${two(number+1)} / ${two(SLIDES.length)}</span></footer></article>`;
+}
+function noteHTML(s){return htmlEscape(s).split('\n').map(line=>`<p class="note-line">${line.replace(/\[[^\]]+\]/g,tag=>`<span class="note-pause">${tag}</span>`).replace(/[∨‖]/g,char=>`<span class="note-mark">${char}</span>`)}</p>`).join('')}
+function showSlide(n){
+  const next=Math.max(0,Math.min(SLIDES.length-1,n));if(next!==current) slideStart=Date.now(); current=next;
+  $('stage').innerHTML=presentHTML(SLIDES[current],current);
+  $('pageCounter').textContent=`${two(current+1)} / ${two(SLIDES.length)}`;
+  $('prevBtn').disabled=current===0; $('nextBtn').disabled=current===SLIDES.length-1;
+  updatePresenter();
+}
+function timerSeconds(){return elapsed+(timerStart===null?0:Math.floor((Date.now()-timerStart)/1000))}
+function updatePresenter(){
+  if(!presenter||presenter.closed)return;
+  try{
+    const d=presenter.document, here=SLIDES[current], next=SLIDES[current+1];
+    d.getElementById('pvCurrent').innerHTML=presentHTML(here,current);
+    d.getElementById('pvNext').innerHTML=next?presentHTML(next,current+1):'<div style="padding:30px;color:#153422;background:#e1ead9;height:100%;display:grid;place-items:center;font-weight:900;font-size:20px">발표 끝 · 감사합니다</div>';
+    d.getElementById('pvNumber').textContent=`${two(current+1)} / ${two(SLIDES.length)}`;
+    d.getElementById('pvSlideLabel').textContent=here.kicker;
+    d.getElementById('pvBudget').textContent=`배정 ${formatSec(here.seconds)}`;
+    d.getElementById('pvNotes').innerHTML=noteHTML(here.note);
+    d.getElementById('pvNotes').style.setProperty('--note-size',notesSize+'px');
+    d.getElementById('pvNextLabel').textContent=next?`다음: ${next.kicker}`:'마지막 장';
+    d.getElementById('pvClock').textContent=formatSec(timerSeconds());
+    d.getElementById('pvTimerBtn').textContent=timerStart===null?'타이머 시작':'일시정지';
+  }catch(err){console.warn('발표자 창을 갱신하지 못했습니다.',err)}
+}
+function presenterFrame(){
+  const styles=document.querySelector('style').textContent;
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>발표자 화면 · HTML Presenter</title><style>${styles}</style></head><body class="presenter-window"><div class="pv-top"><div><div class="pv-title">발표자 화면</div><div class="pv-meta" id="pvSlideLabel"></div></div><div class="pv-spacer"></div><span class="pv-time" id="pvClock">00:00</span><div class="pv-tools"><button class="pv-button" id="pvTimerBtn">타이머 시작</button><button class="pv-button" id="pvReset">초기화</button><button class="pv-button" id="pvPrev">←</button><button class="pv-button" id="pvNextBtn">→</button><button class="pv-button" id="pvSmaller" title="대본 작게">가−</button><button class="pv-button" id="pvLarger" title="대본 크게">가+</button></div></div><div class="pv-body"><div class="pv-left"><div class="pv-caption"><span>현재 슬라이드</span><span id="pvNumber"></span></div><div class="preview-frame" id="pvCurrent"></div><div class="pv-caption"><span id="pvNextLabel">다음 슬라이드</span></div><div class="preview-frame pv-next" id="pvNext"></div></div><section class="pv-notes"><div class="pv-note-top"><div><div class="pv-note-heading">발표 대본</div><div class="pv-note-sub">∨ 짧게 숨 · ‖ 멈춤 · [행동 메모]</div></div><span id="pvBudget" class="pv-tag"></span></div><div class="pv-note-body" id="pvNotes"></div></section></div></body></html>`;
+}
+function openPresenter(){
+  if(presenter&&!presenter.closed){presenter.focus();return}
+  presenter=window.open('','geulbomPresenter','width=1360,height=860');
+  if(!presenter){notify('팝업이 차단됐습니다. 이 파일의 팝업을 허용해 주세요.');return}
+  presenter.document.open();presenter.document.write(presenterFrame());presenter.document.close();
+  const p=id=>presenter.document.getElementById(id);
+  p('pvPrev').onclick=()=>showSlide(current-1);p('pvNextBtn').onclick=()=>showSlide(current+1);
+  p('pvTimerBtn').onclick=toggleTimer;p('pvReset').onclick=resetTimer;
+  p('pvSmaller').onclick=()=>{notesSize=Math.max(17,notesSize-2);updatePresenter()};
+  p('pvLarger').onclick=()=>{notesSize=Math.min(42,notesSize+2);updatePresenter()};
+  presenter.document.addEventListener('keydown',e=>handleKeys(e,true));
+  // Presenter window is foreground during a real presentation; run its clock there.
+  // A timer in the background audience tab may be throttled by the browser.
+  presenter.setInterval(()=>{
+    try { presenter.document.getElementById('pvClock').textContent=formatSec(timerSeconds()) } catch(_) {}
+  },250);
+  updatePresenter();notify('발표자 창을 다른 모니터로 옮기고, 청중 화면에서 F키를 누르세요.');
+}
+function toggleTimer(){if(timerStart===null)timerStart=Date.now();else {elapsed=timerSeconds();timerStart=null}updatePresenter()}
+function resetTimer(){elapsed=0;timerStart=null;updatePresenter()}
+function toggleFull(){if(document.fullscreenElement){document.exitFullscreen?.()}else{document.documentElement.requestFullscreen?.().catch(()=>notify('브라우저 메뉴에서 전체화면을 선택해 주세요.'))}}
+function openPrint(){
+  const printWin=window.open('','geulbomPrint','width=1020,height=820');
+  if(!printWin){notify('인쇄 창 팝업을 허용해 주세요.');return}
+  const styles=document.querySelector('style').textContent;
+  const pages=SLIDES.map((s,i)=>`<div class="print-page"><div class="stage">${presentHTML(s,i)}</div></div>`).join('');
+  printWin.document.open();printWin.document.write(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>HTML Presenter · PDF 인쇄</title><style>${styles}\n@page{size:16in 9in;margin:0}html,body{margin:0!important;padding:0!important;background:#fff!important}body{color:#222}.print-page{width:100%;page-break-after:always;break-after:page;height:100vh;overflow:hidden}.print-page:last-child{break-after:auto;page-break-after:auto}.print-page>.stage{width:100%;height:100%;border:0;border-radius:0;box-shadow:none;aspect-ratio:16/9}.print-page>.stage>.slide{height:100%}</style></head><body>${pages}</body></html>`);printWin.document.close();
+  printWin.focus();setTimeout(()=>printWin.print(),400);
+}
+function handleKeys(e,isPresenter){
+  if(e.altKey||e.ctrlKey||e.metaKey)return;
+  const key=e.key;
+  if(!isPresenter&&$('helpDialog').open){if(key==='Escape')$('helpDialog').close();return}
+  if(['ArrowRight','PageDown',' '].includes(key)){e.preventDefault();showSlide(current+1)}
+  if(['ArrowLeft','PageUp'].includes(key)){e.preventDefault();showSlide(current-1)}
+  if(key==='Home'){e.preventDefault();showSlide(0)}
+  if(key==='End'){e.preventDefault();showSlide(SLIDES.length-1)}
+  if(!isPresenter&&(key==='p'||key==='P')){e.preventDefault();openPresenter()}
+  if(!isPresenter&&(key==='f'||key==='F')){e.preventDefault();toggleFull()}
+  if(!isPresenter&&(key==='?'||key==='/')){e.preventDefault();$('helpDialog').showModal()}
+}
+$('prevBtn').onclick=()=>showSlide(current-1);$('nextBtn').onclick=()=>showSlide(current+1);
+$('presenterBtn').onclick=openPresenter;$('fullBtn').onclick=toggleFull;
+$('printBtn').onclick=openPrint;$('helpBtn').onclick=()=>$('helpDialog').showModal();$('closeHelp').onclick=()=>$('helpDialog').close();
+document.addEventListener('keydown',e=>handleKeys(e,false));
+setInterval(()=>{if(presenter&&!presenter.closed){try{presenter.document.getElementById('pvClock').textContent=formatSec(timerSeconds())}catch(_){}}},500);
+showSlide(0);
+</script>
+</body>
+</html>
