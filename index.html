@@ -48,7 +48,7 @@
     .slide-card-title {font-size:calc(2.55 * var(--slide-unit, 1cqw));line-height:1.35;font-weight:900;word-break:keep-all}
     .slide-card-detail {color:#667869;font-size:calc(1.65 * var(--slide-unit, 1cqw));line-height:1.52;word-break:keep-all}
     .steps {display:grid;grid-template-columns:repeat(4,1fr);gap:calc(1.5 * var(--slide-unit, 1cqw));position:relative;z-index:1;margin-top:calc(5 * var(--slide-unit, 1cqw));}
-    .step {border-top:solid calc(.5 * var(--slide-unit, 1cqw)) #89ab8e;background:#f1f5eb;padding:calc(2.5 * var(--slide-unit, 1cqw)) calc(1.7 * var(--slide-unit, 1cqw));min-height:calc(22 * var(--slide-unit, 1cqw));position:relative}
+    .step {background:#f1f5eb;padding:calc(2.5 * var(--slide-unit, 1cqw)) calc(1.7 * var(--slide-unit, 1cqw));min-height:calc(22 * var(--slide-unit, 1cqw));position:relative}
     .step:not(:last-child):after {content:"›";position:absolute;right:calc(-1.3 * var(--slide-unit, 1cqw));top:calc(8 * var(--slide-unit, 1cqw));font-size:calc(2.5 * var(--slide-unit, 1cqw));color:#8cab8d;z-index:2;font-weight:900}
     .step-num {color:#81a78a;font-size:calc(1.8 * var(--slide-unit, 1cqw));font-weight:900}
     .step-title {font-size:calc(2.5 * var(--slide-unit, 1cqw));font-weight:900;margin:calc(2 * var(--slide-unit, 1cqw)) 0 calc(1.4 * var(--slide-unit, 1cqw))}
@@ -64,6 +64,8 @@
     .compare-detail {font-size:calc(1.7 * var(--slide-unit, 1cqw));line-height:1.5;color:#64776a;white-space:pre-line}
     .checks {display:grid;grid-template-columns:1fr 1fr;gap:calc(1.7 * var(--slide-unit, 1cqw)) calc(2.4 * var(--slide-unit, 1cqw));position:relative;z-index:1;margin-top:calc(4 * var(--slide-unit, 1cqw));}
     .check-item {display:flex;gap:calc(1.4 * var(--slide-unit, 1cqw));align-items:flex-start;background:#f1f5ea;padding:calc(2.1 * var(--slide-unit, 1cqw));border-radius:calc(1.2 * var(--slide-unit, 1cqw));font-size:calc(2.05 * var(--slide-unit, 1cqw));font-weight:750;line-height:1.4}
+    .check-item > div:last-child { min-width:0; text-wrap:pretty; overflow-wrap:normal; word-break:keep-all; }
+    .check-ending { white-space:nowrap; }
     .check-icon {display:grid;place-items:center;flex:none;width:calc(2.7 * var(--slide-unit, 1cqw));height:calc(2.7 * var(--slide-unit, 1cqw));border-radius:50%;background:#79a07e;color:white;font-size:calc(1.6 * var(--slide-unit, 1cqw));font-weight:900}
     .bottom-nav {width:min(100%,1300px);margin-top:21px;display:flex;align-items:center;gap:12px;}
     .pager {display:flex;align-items:center;gap:11px;min-width:150px;justify-content:center;font-variant-numeric:tabular-nums;color:#b9c8b8;font-size:14px;font-weight:800}
@@ -221,7 +223,7 @@ function presentHTML(slide, number){
   if(slide.kind==='steps') middle=`<div class="steps">${cards.map((it,i)=>`<div class="step"><div class="step-num">${two(i+1)}</div><div class="step-title">${text(it[0])}</div><div class="step-text">${text(it[1])}</div></div>`).join('')}</div>`;
   if(slide.kind==='quote') middle=`<div class="quote-shell"><div class="quote-text">${text(slide.title)}</div><div class="quote-detail">${text(slide.lead)}</div></div>`;
   if(slide.kind==='compare') middle=`<div class="compare">${cards.map((it,i)=>`<div class="compare-col"><div class="compare-label">${i?'발표자만 보는 화면':'모두가 보는 화면'}</div><div class="compare-title">${text(it[1])}</div><div class="compare-detail">${text(it[2])}</div></div>`).join('')}</div>`;
-  if(slide.kind==='checklist') middle=`<div class="checks">${cards.map(it=>`<div class="check-item"><div class="check-icon">✓</div><div>${text(it)}</div></div>`).join('')}</div>`;
+  if(slide.kind==='checklist') middle=`<div class="checks">${cards.map(it=>`<div class="check-item"><div class="check-icon">✓</div><div>${text(it).replace(/설정됐는가\?/, '<span class="check-ending">설정됐는가?</span>')}</div></div>`).join('')}</div>`;
   return `<article class="slide slide--${text(slide.kind)}"><div class="slide-kicker">${text(slide.kicker)}</div>${slide.kind==='quote'?'':`<h1 class="slide-title">${text(slide.title)}</h1><p class="slide-lead">${text(slide.lead)}</p>`}${middle}<footer class="slide-foot"><span class="slide-mark"><span class="mark-dot"></span> HTML Presenter · 공개 예시</span><span>${two(number+1)} / ${two(SLIDES.length)}</span></footer></article>`;
 }
 function noteHTML(s){return htmlEscape(s).split('\n').map(line=>`<p class="note-line">${line.replace(/\[[^\]]+\]/g,tag=>`<span class="note-pause">${tag}</span>`).replace(/[∨‖]/g,char=>`<span class="note-mark">${char}</span>`)}</p>`).join('')}
